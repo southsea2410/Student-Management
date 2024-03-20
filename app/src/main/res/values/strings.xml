@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">W07. Student MGMT Improved</string>
+    <string name="title_activity_main">Students</string>
+    <string name="title_activity_add_student">Student Information</string>
+    <string name="title_activity_edit_student">Student Information</string>
+    <string name="title_activity_choose_class">Choose Class</string>
+    <string-array name="class_list">
+        <item>20KTPM1</item>
+        <item>20KTPM2</item>
+        <item>20KTPM3</item>
+        <item>21KTPM1</item>
+        <item>21KTPM2</item>
+        <item>21KTPM3</item>
+    </string-array>
+</resources>
