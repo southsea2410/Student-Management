@@ -43,4 +43,9 @@ class StudentRepository(
         val student = StudentID(_id)
         studentDAO.deleteStudents(student)
     }
+
+    fun searchByName(name: String) : Flow<List<Student>> {
+         return studentDAO.searchByName(name)
+    }
+
 }

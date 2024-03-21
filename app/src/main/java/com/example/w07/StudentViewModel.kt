@@ -25,6 +25,9 @@ class StudentViewModel(private val repository: StudentRepository) : ViewModel(){
     fun delete(studentID: Int) = viewModelScope.launch {
         repository.deleteStudent(studentID)
     }
+    fun searchByName(name: String) : LiveData<List<Student>> {
+        return repository.searchByName(name).asLiveData()
+    }
 
 }
 

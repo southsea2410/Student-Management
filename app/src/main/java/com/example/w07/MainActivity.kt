@@ -15,6 +15,8 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
@@ -25,6 +27,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val studentViewModel : StudentViewModel by viewModels {
         StudentViewFactory((application as MyApplication).studentRepository)
     }
+
     // Intent Launchers
     private val addStudentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -34,7 +37,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 val _gender = data?.getStringExtra("gender")
                 val _dob = data?.getStringExtra("dob")
                 val _class = data?.getStringExtra("class")
-
                 studentViewModel.insert(_name!!, _gender!!, _dob!!, _class!!)
             }
         }
@@ -47,20 +49,24 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 val _gender = data?.getStringExtra("gender")
                 val _dob = data?.getStringExtra("dob")
                 val _class = data?.getStringExtra("class")
-                Log.d(
-                    "MainActivity",
-                    "id: $_id, name: $_name, gender: $_gender, dob: $_dob, class: $_class"
-                )
-
                 studentViewModel.update(_id!!, _name!!, _gender!!, _dob!!, _class!!)
             }
             if (it.resultCode == RESULT_FIRST_USER) {
-                val data = it.data
-                val _id = data?.getIntExtra("id", -1)
-                studentViewModel.delete(_id!!)
+                // Snackbar
+                Snackbar.make(findViewById(R.id.textView), "Student Deleted", Snackbar.LENGTH_SHORT)
+                    .setAction("Undo"){}
+                    .addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                        override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                            if (event != DISMISS_EVENT_ACTION) {
+                                val data = it.data
+                                val _id = data?.getIntExtra("id", -1)
+                                studentViewModel.delete(_id!!)
+                            }
+                        }
+                    })
+                    .show()
             }
         }
-
     private fun dirLog() {
         Log.d(
             "MainActivity", """
@@ -96,12 +102,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
 
         // Observer for data changes
-        studentViewModel.studentList.observe(this, Observer { students ->
+        studentViewModel.studentList.observe(this) { students ->
             // Update the cached in the adapter
+            Log.d("MainActivity", "Student list changed: ${students.size} students found")
             students?.let { adapter.submitList(it) }
-        })
-
-
+        }
 
         // Add student button
         findViewById<Button>(R.id.addStudentBtn).setOnClickListener {
@@ -117,31 +122,26 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             studentListContainer.layoutManager = GridLayoutManager(this, 2)
         }
 
-//        // AutocompleteTextView Searching
-//        val searchAutocomplete = findViewById<AutoCompleteTextView>(R.id.searchStudent)
-//        searchAutocomplete.setAdapter(
-//            ArrayAdapter(
-//                this,
-//                android.R.layout.simple_list_item_1,
-//                studentRepository.studentList.toList().map { it._name })
-//        )
-//        searchAutocomplete.addTextChangedListener(object : TextWatcher {
-//            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-//                // Not yet implemented
-//            }
-//
-//            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-//                // Not yet implemented
-//            }
-//
-//            override fun afterTextChanged(s: android.text.Editable?) {
-//                val student =
-//                    studentRepository.studentList.filter { it._name.contains(s.toString()) }
-//                if (student != null)
-//                studentListContainer.adapter =
-//                    StudentAdapter(itemClickHandler)
-//            }
-//        })
+        // AutocompleteTextView Searching
+        val searchAutocomplete = findViewById<AutoCompleteTextView>(R.id.searchStudent)
+        searchAutocomplete.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) {
+                // Observer for data changes
+                studentViewModel.searchByName(s.toString()).observe(this@MainActivity) { students ->
+                    Log.d("MainActivity", "Query: ${students.size} students found")
+                    // Update the cached in the adapter
+                    students?.let { adapter.submitList(it) }
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // Not yet implemented
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Not yet implemented
+            }
+        })
     }
 }
 

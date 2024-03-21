@@ -72,5 +72,8 @@ interface StudentDAO {
     suspend fun deleteStudents(studentID: StudentID)
 
     @Query("DELETE FROM Student")
-    fun deleteAll()
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM Student WHERE _name LIKE '%' || :name || '%'")
+    fun searchByName(name: String) : Flow<List<Student>>
 }

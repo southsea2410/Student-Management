@@ -1,5 +1,6 @@
 package com.example.w07
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -15,17 +16,18 @@ import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
+import java.util.Calendar
 
-class EditActivity : AppCompatActivity(R.layout.activity_edit_student)
+class EditActivity : AppCompatActivity(R.layout.activity_edit_student), StudentDeleteDialog.StudentDeleteDialogListener
 {
+    private val dobDialog by lazy { DatePickerDialog(this) }
+    private val nameInput by lazy { findViewById<EditText>(R.id.editFullName_Edit) }
+    private val dobInput by lazy { findViewById<EditText>(R.id.editDOB_Edit) }
+    private val spinner by lazy { findViewById<Spinner>(R.id.classSpinner_Edit) }
+    private val genderGroup by lazy { findViewById<RadioGroup>(R.id.radioGroupGender_Edit) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Inputs
-        val nameInput = findViewById<EditText>(R.id.editFullName_Edit)
-        val dobInput = findViewById<EditText>(R.id.editDOB_Edit)
-        val spinner = findViewById<Spinner>(R.id.classSpinner_Edit)
-        val genderGroup = findViewById<RadioGroup>(R.id.radioGroupGender_Edit)
 
         // Class Spinner initial setup
         var _class = ""
@@ -39,7 +41,6 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student)
                 spinner.setSelection(spinnerPosition)
             }
         }
-
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 // TODO("Not yet implemented")
@@ -60,6 +61,19 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student)
             else -> genderGroup.clearCheck()
         }
 
+        // DOB EditText
+        dobInput.isFocusable = false
+        dobInput.keyListener = null
+        dobDialog.setOnDateSetListener { _, year, month, day ->
+            dobInput.setText("${if (day < 10) '0' + day.toString() else day}/${if (month < 9) '0' + (month + 1).toString() else month + 1}/$year")
+        }
+        dobInput.setOnClickListener {
+            val dob = stringToCalendar(dobInput.text.toString())
+            dobDialog.updateDate(dob["year"]!!, dob["month"]!! - 1, dob["day"]!!)
+            dobDialog.show()
+        }
+
+        // Save button
         findViewById<Button>(R.id.addStudentSaveBtn_Edit).setOnClickListener {
             // Gender checked button id
             val _genderId = genderGroup.checkedRadioButtonId
@@ -84,11 +98,28 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student)
             finish()
         }
 
+        // Delete button
         findViewById<Button>(R.id.addStudentDeleteBtn_Edit).setOnClickListener{
-            val replyIntent = Intent()
-            replyIntent.putExtra("id", intent.getIntExtra("id", -1))
-            setResult(RESULT_FIRST_USER, replyIntent)
-            finish()
+            val dialog = StudentDeleteDialog()
+            dialog.show(supportFragmentManager, "DeleteStudent")
         }
+    }
+
+    private fun stringToCalendar(date: String) : Map<String, Int>{
+        val calendar = Calendar.getInstance()
+        val dateParts = date.split("/")
+        return mapOf(
+            "day" to dateParts[0].toInt(),
+            "month" to dateParts[1].toInt(),
+            "year" to dateParts[2].toInt()
+        )
+    }
+
+    override fun onDialogPositiveClick(dialog: DialogFragment) {
+        val replyIntent = Intent()
+        replyIntent.putExtra("id", intent.getIntExtra("id", -1))
+        setResult(RESULT_FIRST_USER, replyIntent)
+        Log.d("EditActivity", "Student Delete Confirmed")
+        finish()
     }
 }
