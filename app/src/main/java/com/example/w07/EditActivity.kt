@@ -4,50 +4,50 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Spinner
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import java.util.Calendar
 
-class EditActivity : AppCompatActivity(R.layout.activity_edit_student), StudentDeleteDialog.StudentDeleteDialogListener
+class EditActivity : AppCompatActivity(R.layout.activity_edit_student), ClassSelectionDialog.ClassSelectionDialogListener, StudentDeleteDialog.StudentDeleteDialogListener
 {
     private val dobDialog by lazy { DatePickerDialog(this) }
     private val nameInput by lazy { findViewById<EditText>(R.id.editFullName_Edit) }
-    private val dobInput by lazy { findViewById<EditText>(R.id.editDOB_Edit) }
-    private val spinner by lazy { findViewById<Spinner>(R.id.classSpinner_Edit) }
+    private val dobInput by lazy { findViewById<EditText>(R.id.dob_Edit) }
+    private val classInput by lazy { findViewById<EditText>(R.id.class_Edit) }
     private val genderGroup by lazy { findViewById<RadioGroup>(R.id.radioGroupGender_Edit) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Class Spinner initial setup
-        var _class = ""
-        ArrayAdapter.createFromResource(this, R.array.class_list, android.R.layout.simple_spinner_item).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinner.adapter = adapter
-            intent.getStringExtra("class").toString().also {
-                // on below line we are getting the position of the item by the item name in our adapter.
-                val spinnerPosition: Int = adapter.getPosition(it)
-                // on below line we are setting selection for our spinner to spinner position.
-                spinner.setSelection(spinnerPosition)
-            }
-        }
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // TODO("Not yet implemented")
-            }
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                _class = parent?.getItemAtPosition(position).toString()
-            }
+//        var _class = ""
+//        ArrayAdapter.createFromResource(this, R.array.class_list, android.R.layout.simple_spinner_item).also { adapter ->
+//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//            spinner.adapter = adapter
+//            intent.getStringExtra("class").toString().also {
+//                // on below line we are getting the position of the item by the item name in our adapter.
+//                val spinnerPosition: Int = adapter.getPosition(it)
+//                // on below line we are setting selection for our spinner to spinner position.
+//                spinner.setSelection(spinnerPosition)
+//            }
+//        }
+//        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            override fun onNothingSelected(parent: AdapterView<*>?) {
+//                // TODO("Not yet implemented")
+//            }
+//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+//                _class = parent?.getItemAtPosition(position).toString()
+//            }
+//        }
+        classInput.isFocusable = false
+        classInput.setOnClickListener{
+            val dialog = ClassSelectionDialog()
+            dialog.show(supportFragmentManager, "ClassSelectionDialog")
         }
 
         // Set initial values for other fields
@@ -63,7 +63,7 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student), StudentD
 
         // DOB EditText
         dobInput.isFocusable = false
-        dobInput.keyListener = null
+//        dobInput.keyListener = null
         dobDialog.setOnDateSetListener { _, year, month, day ->
             dobInput.setText("${if (day < 10) '0' + day.toString() else day}/${if (month < 9) '0' + (month + 1).toString() else month + 1}/$year")
         }
@@ -80,6 +80,7 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student), StudentD
 
             val _name = nameInput.text.toString()
             val _dob = dobInput.text.toString()
+            val _class = classInput.text.toString()
 
             if (_name.isEmpty() || _dob.isEmpty() || _class.isEmpty() || _genderId == -1) {
                 return@setOnClickListener
@@ -106,7 +107,6 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student), StudentD
     }
 
     private fun stringToCalendar(date: String) : Map<String, Int>{
-        val calendar = Calendar.getInstance()
         val dateParts = date.split("/")
         return mapOf(
             "day" to dateParts[0].toInt(),
@@ -121,5 +121,9 @@ class EditActivity : AppCompatActivity(R.layout.activity_edit_student), StudentD
         setResult(RESULT_FIRST_USER, replyIntent)
         Log.d("EditActivity", "Student Delete Confirmed")
         finish()
+    }
+
+    override fun setClass(dialog: DialogFragment, selectedClass: String) {
+        classInput.setText(selectedClass)
     }
 }

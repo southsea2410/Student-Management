@@ -61,10 +61,11 @@
             android:layout_marginTop="16dp"
             android:text="Class" />
 
-        <Spinner
-            android:id="@+id/classSpinner"
+        <EditText
+            android:id="@+id/classSelection"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:ems="10" />
 
         <TextView
             android:id="@+id/textViewGender"
